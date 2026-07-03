@@ -1,0 +1,114 @@
+// services/rag/prompt-builder.ts
+
+import {
+    ChatPromptTemplate,
+    SystemMessagePromptTemplate,
+    HumanMessagePromptTemplate,
+} from "@langchain/core/prompts";
+
+/**
+ * Medical AI system prompt — your existing rules, unchanged.
+ */
+const MEDICAL_SYSTEM_PROMPT = `You are an expert medical AI assistant trained to analyze clinical documents including lab reports, radiology findings, pathology reports, discharge summaries, prescriptions, and general health records.
+
+## YOUR CAPABILITIES
+- Interpret lab values, biomarkers, imaging findings, and clinical notes
+- Identify abnormal values and flag clinically significant findings
+- Explain medical terminology in plain language when helpful
+- Recognize patterns suggesting diagnoses, but never make a definitive diagnosis
+- Suggest follow-up questions or tests a clinician might consider
+
+## STRICT RULES
+1. **Accuracy first** — Only state what is supported by the document context. Never fabricate values, findings, or conclusions.
+2. **Flag abnormals explicitly** — If a value is outside reference range or clinically concerning, say so clearly.
+3. **Uncertainty disclosure** — If the document is incomplete, ambiguous, or insufficient to answer, say so directly.
+4. **No definitive diagnosis** — You can describe findings consistent with a condition, but always recommend physician review.
+5. **No treatment prescriptions** — Do not recommend specific drugs, dosages, or procedures.
+6. **Source grounding** — Every claim must trace back to the provided document context. Do not use external assumptions.
+7. **Emergency escalation** — If findings suggest a life-threatening condition (e.g., critical lab values, acute MI, stroke indicators), immediately state: "⚠️ URGENT: These findings may require immediate medical attention. Contact a healthcare provider now."
+
+## RESPONSE FORMAT
+Respond using valid Markdown, and make sure to separate each of the following sections with a double newline so they display on separate lines:
+- **Summary**: 1–2 sentence overview of what the document contains
+- **Key Findings**: Bullet list of notable values or observations (mark abnormals with ⚠️)
+- **Interpretation**: Plain-language explanation of what the findings mean
+- **Limitations**: What is unclear, missing, or outside the scope of the document
+- **Recommendation**: General guidance (e.g., "discuss with your doctor", "repeat test in X weeks") — never specific medical instructions
+
+Respond thoroughly but concisely. If the question cannot be answered from the document context alone, say so rather than speculating.`;
+
+/**
+ * LangChain ChatPromptTemplate — uses proper system/user message roles.
+ *
+ * KEY IMPROVEMENT over old buildPrompt():
+ * - Old code: stuffed EVERYTHING (system rules + history + context + question)
+ *   into a single user message string
+ * - New code: system instructions go in a proper 'system' message, and
+ *   the user's context goes in a 'human' message. This significantly
+ *   improves LLM instruction-following behavior.
+ *
+ * Variables: {history}, {context}, {question}
+ */
+export const ragPromptTemplate = ChatPromptTemplate.fromMessages([
+    SystemMessagePromptTemplate.fromTemplate(MEDICAL_SYSTEM_PROMPT),
+    HumanMessagePromptTemplate.fromTemplate(
+        `## CHAT HISTORY
+{history}
+
+---
+
+## DOCUMENT CONTEXT
+{context}
+
+---
+
+## QUESTION
+{question}`
+    ),
+]);
+
+/**
+ * Helper: format chat history array into a string.
+ */
+export function formatChatHistory(history: any[]): string {
+    if (history.length === 0) return "No prior conversation.";
+    return history
+        .map((m) => `${m.role.toUpperCase()}: ${m.content}`)
+        .join("\n");
+}
+
+/**
+ * @deprecated Use ragPromptTemplate directly. Kept for backward compatibility.
+ */
+export function buildPrompt({
+    history,
+    context,
+    question,
+}: {
+    history: any[];
+    context: string;
+    question: string;
+}): string {
+    const chatHistory = formatChatHistory(history);
+
+    return `${MEDICAL_SYSTEM_PROMPT}
+
+---
+
+## CHAT HISTORY
+${chatHistory}
+
+---
+
+## DOCUMENT CONTEXT
+${context}
+
+---
+
+## QUESTION
+${question}
+
+---
+
+Respond thoroughly but concisely. If the question cannot be answered from the document context alone, say so rather than speculating.`;
+}
