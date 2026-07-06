@@ -8,9 +8,6 @@ import { indexDocuments } from "../vector/qdrant.service";
  *   1. loadDocuments()   — PDF/DOCX/TXT → Document[] with metadata
  *   2. chunkDocuments()  — smart splitting on natural boundaries
  *   3. indexDocuments()  — batch embed + upsert to Qdrant
- *
- * OLD PIPELINE: extractText → chunkText → /sneindexChunks (all manual, one-by-one)
- * NEW PIPELINE: loadDocuments → chunkDocuments → indexDocuments (LangChain, batched)
  */
 export async function processUploadedFiles(
     files: Express.Multer.File[],

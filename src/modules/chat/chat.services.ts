@@ -142,47 +142,6 @@ export async function createNewChat(userId: string) {
 }
 
 
-
-// function to prepare prompt for chat streaming
-// export async function prepareChatPrompt({
-//   chatId,
-//   userId,
-//   message,
-//   files,
-// }: {
-//   chatId: string;
-//   userId: string;
-//   message: string;
-//   files?: Express.Multer.File[];
-// }) {
-//   let chat = await validateChat(chatId, userId);
-
-//   await saveUserMessage(chatId, message);
-
-//   // check if new chat then add the proper name for chat
-//   if (chat.title === "new chat") {
-//     const generatedTitle = await generateChatTitle(message);
-//     await updateChatTitle(chatId, generatedTitle);
-//   }
-
-//   if (files?.length) {
-//     await processUploadedFiles(files, chatId, userId);
-//   }
-
-//   const context = await searchRelevantChunks(message, chatId);
-
-//   const history = await loadChatHistory(chatId);
-
-//   const prompt = buildPrompt({
-//     history,
-//     context,
-//     question: message,
-//   });
-
-//   return prompt;
-// }
-
-
 // function to prepare chat for streaming — now returns chatId for chain creation
 export async function prepareChatForStreaming({
   chatId,

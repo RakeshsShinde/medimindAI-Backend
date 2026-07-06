@@ -1,16 +1,6 @@
 import { Document } from "@langchain/core/documents";
 import { getVectorStore } from "../../config/langchain.config";
-
-/**
- * Creates a LangChain retriever filtered to a specific chat's documents.
- *
- * KEY IMPROVEMENTS over old searchRelevantChunks():
- * - Returns structured Document[] with metadata (page, source) instead of flat string
- * - Retrieves 8 candidates instead of 5 for better recall
- * - Score threshold filtering removes noisy/irrelevant chunks
- * - Uses LangChain's retriever interface (composable with chains)
- */
-
+import { rerankDocuments } from "./re-ranker.service";
 
 export async function createRetriever(chatId: string) {
     const vectorStore = await getVectorStore("medical_chunks");
@@ -28,15 +18,13 @@ export async function createRetriever(chatId: string) {
     })
 }
 
-/**
- * Retrieves relevant document chunks for a question within a specific chat.
- * Returns Document[] with full metadata.
- */
-
 export async function retrieveContext(question: string, chatId: string): Promise<Document[]> {
     const retriever = await createRetriever(chatId);
     const docs = await retriever.invoke(question);
-    return docs;
+
+    // rerank condidates and select the top 5 most relevent documents 
+    const rerankedDocs = await rerankDocuments(question, docs, 5);
+    return rerankedDocs;
 }
 
 
@@ -55,9 +43,6 @@ export function formatDocumentsAsString(docs: Document[]): string {
         })
         .join("\n\n---\n\n");
 }
-
-
-
 
 
 export async function searchRelevantChunks(question: string, chatId: string): Promise<string> {

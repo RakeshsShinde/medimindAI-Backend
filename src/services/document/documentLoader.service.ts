@@ -64,8 +64,3 @@ export async function loadDocuments(file: Express.Multer.File): Promise<Document
         }
     }
 }
-
-export async function extractText(file: Express.Multer.File): Promise<string> {
-    const docs = await loadDocuments(file);
-    return docs.map((doc) => doc.pageContent).join("\n\n")
-}

@@ -1,7 +1,0 @@
-// config/groq-client.ts
-import Groq from "groq-sdk";
-import { env } from "./env";
-
-export const groqClient = new Groq({
-  apiKey: env.GROQ_API_KEY,
-});

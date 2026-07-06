@@ -77,38 +77,18 @@ export function formatChatHistory(history: any[]): string {
         .join("\n");
 }
 
-/**
- * @deprecated Use ragPromptTemplate directly. Kept for backward compatibility.
- */
-export function buildPrompt({
-    history,
-    context,
-    question,
-}: {
-    history: any[];
-    context: string;
-    question: string;
-}): string {
-    const chatHistory = formatChatHistory(history);
+export const CHAT_TITLE_SYSTEM_PROMPT = `You are a strict metadata generator. Your sole task is to generate a short, clean title (maximum 8 words) that summarizes the user's initial message.
+CRITICAL RULES:
+- Output the TITLE ONLY.
+- DO NOT answer the user's query or medical questions.
+- DO NOT include quotes, prefix text, or punctuation.
+- NEVER output conversational text, explanations, or meta-comments.
+Examples:
+- Message: "analyze my blood report" -> "Blood Report Analysis"
+- Message: "what are the side effects of aspirin" -> "Aspirin Side Effects"
+- Message: "ECG shows abnormalities" -> "ECG Findings Summary"`;
 
-    return `${MEDICAL_SYSTEM_PROMPT}
-
----
-
-## CHAT HISTORY
-${chatHistory}
-
----
-
-## DOCUMENT CONTEXT
-${context}
-
----
-
-## QUESTION
-${question}
-
----
-
-Respond thoroughly but concisely. If the question cannot be answered from the document context alone, say so rather than speculating.`;
-}
+export const chatTitlePromptTemplate = ChatPromptTemplate.fromMessages([
+    ["system", CHAT_TITLE_SYSTEM_PROMPT],
+    ["human", "{firstMessage}"]
+])

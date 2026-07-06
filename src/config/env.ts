@@ -18,6 +18,6 @@ export const env = {
   JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET!,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID!,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET!,
-
   OLLAMA_BASE_URL: process.env.OLLAMA_BASE_URL || "http://localhost:11434",
+  COHERE_API_KEY: process.env.COHERE_API_KEY!
 };
