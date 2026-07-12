@@ -6,8 +6,10 @@ import {
   varchar,
   jsonb,
 } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 
 import { chats } from "./chats";
+import { messageFiles } from "./messageFiles";
 
 export const messages = pgTable("messages", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -28,3 +30,12 @@ export const messages = pgTable("messages", {
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+export const messagesRelations = relations(messages, ({ one, many }) => ({
+  chat: one(chats, {
+    fields: [messages.chatId],
+    references: [chats.id],
+  }),
+  files: many(messageFiles),
+}));
+

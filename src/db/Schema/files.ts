@@ -6,9 +6,11 @@ import {
   timestamp,
   bigint,
 } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 
 import { chats } from "./chats";
 import { users } from "./users";
+import { messageFiles } from "./messageFiles";
 
 export const files = pgTable("files", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -22,8 +24,7 @@ export const files = pgTable("files", {
   chatId: uuid("chat_id")
     .references(() => chats.id, {
       onDelete: "cascade",
-    })
-    .notNull(),
+    }),
 
   fileName: varchar("file_name", {
     length: 255,
@@ -47,3 +48,16 @@ export const files = pgTable("files", {
 
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+export const filesRelations = relations(files, ({ one, many }) => ({
+  user: one(users, {
+    fields: [files.userId],
+    references: [users.id],
+  }),
+  chat: one(chats, {
+    fields: [files.chatId],
+    references: [chats.id],
+  }),
+  messageLinks: many(messageFiles),
+}));
+

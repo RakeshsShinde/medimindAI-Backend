@@ -38,6 +38,20 @@ export async function sendMessageHandler(req: AuthenticatedRequest, res: Respons
     const chatId = req.params.chatId as string;
     const message = req.body.message;
     const files = req.files as any;
+
+    let existingFileIds: string[] | undefined = undefined;
+    if (req.body.existingFileIds) {
+        try {
+            existingFileIds = typeof req.body.existingFileIds === "string"
+                ? JSON.parse(req.body.existingFileIds)
+                : req.body.existingFileIds;
+        } catch (e) {
+            existingFileIds = Array.isArray(req.body.existingFileIds)
+                ? req.body.existingFileIds
+                : [req.body.existingFileIds];
+        }
+    }
+
     // Prepare: save user message, process files, generate title
     const { chatId: preparedChatId, message: preparedMessage } =
         await prepareChatForStreaming({
@@ -45,6 +59,7 @@ export async function sendMessageHandler(req: AuthenticatedRequest, res: Respons
             userId,
             message,
             files,
+            existingFileIds,
         });
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");

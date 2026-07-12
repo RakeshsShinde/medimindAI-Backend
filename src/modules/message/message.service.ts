@@ -58,7 +58,7 @@ export async function sendMessage({
 }) {
     let chat = await validateChat(chatId, userId);
 
-    await saveUserMessage(chatId, message);
+    const savedMsg = await saveUserMessage(chatId, message);
 
     // check if new chat then add the proper name for chat
     if (chat.title === "new chat") {
@@ -67,7 +67,7 @@ export async function sendMessage({
     }
 
     if (files?.length) {
-        await processUploadedFiles(files, chatId, userId);
+        await processUploadedFiles(files, chatId, userId, savedMsg.id);
     }
 
     //  searchRelevantChunks + loadChatHistory + buildPrompt + generateAIResponse

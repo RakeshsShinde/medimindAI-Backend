@@ -8,6 +8,7 @@ import {
   deleteChat,
   getUserChats,
   renameChat,
+  getUserVaultFiles,
 } from "./chat.services";
 import { ApiError } from "../../utils/ApiError";
 import { getChatMessages } from "../message/message.service";
@@ -68,6 +69,19 @@ export async function deleteChatAPI(req: AuthenticatedRequest, res: Response) {
   return res.status(200).json({
     success: true,
     data: deletedChat,
+  });
+}
+
+// get all files in the user's document vault
+export async function getUserFilesAPI(req: AuthenticatedRequest, res: Response) {
+  const user = req.user;
+  if (!user) throw new ApiError(401, "Unauthorized");
+
+  const files = await getUserVaultFiles(user.id);
+
+  return res.status(200).json({
+    success: true,
+    data: files,
   });
 }
 

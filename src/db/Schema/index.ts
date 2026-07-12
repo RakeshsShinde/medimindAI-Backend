@@ -4,3 +4,5 @@ export * from "./messages";
 export * from "./files";
 export * from "./chatShares";
 export * from "./refreshTokens";
+export * from "./messageFiles";
+
