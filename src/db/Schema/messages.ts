@@ -28,6 +28,8 @@ export const messages = pgTable("messages", {
 
   citations: jsonb("citations"),
 
+  toolData: jsonb("tool_data"),
+
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

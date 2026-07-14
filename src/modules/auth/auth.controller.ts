@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import { LoginUser, registerUser, refreshAccessToken, logoutUser } from "./auth.service";
-import { AuthenticatedRequest } from "../../types";
 import { ApiError } from "../../utils/ApiError";
 import { generateAccessToken, generateRefreshToken } from "../../utils/token";
 import { refreshTokens } from "../../db/Schema";
@@ -66,7 +65,6 @@ export const refreshTokenAPI = async (req: Request, res: Response) => {
 
 export const logoutAPI = async (req: Request, res: Response) => {
   const userId = (req as any).user?.id;
-  console.log("user", (req as any).user)
   if (!userId) {
     throw new ApiError(401, "User not authenticated");
   }

@@ -15,6 +15,7 @@ import { uploadDocumentToCloudinary } from "../../utils/cloudinary-upload";
  *   5. chunkDocuments()  — smart splitting on natural boundaries
  *   6. indexDocuments()  — batch embed + upsert to Qdrant (with fileId)
  */
+
 export async function processUploadedFiles(
     files: Express.Multer.File[],
     chatId: string,
@@ -50,10 +51,10 @@ export async function processUploadedFiles(
                 });
         }
 
-        // Step 4: Load file into LangChain Documents (with page/source metadata)
+        // Step 4: Load file into LangChain Documents 
         const documents = await loadDocuments(file);
 
-        // Step 5: Smart chunking — respects sentence/paragraph boundaries
+        // Step 5:  chunking 
         const chunks = await ChunkDocuments(documents);
 
         // Step 6: Batch embed + index into Qdrant (including fileId in metadata)

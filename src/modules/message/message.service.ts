@@ -37,11 +37,7 @@ export async function saveUserMessage(chatId: string, content: string) {
 
 /**
  * Send message and get AI response via LangChain RAG chain.
- *
- * OLD FLOW (4 manual steps):
- *   searchRelevantChunks() → loadChatHistory() → buildPrompt() → generateAIResponse()
- *
- * NEW FLOW (1 chain call):
+ *  FLOW (1 chain call):
  *   createRAGChain(chatId).invoke(message)
  *   The chain internally does: retrieve context + load history + format prompt + call LLM
  */

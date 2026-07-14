@@ -3,17 +3,20 @@ import { db } from "../../config/db";
 import { messages } from "../../db/Schema";
 import { AuthenticatedRequest } from "../../types";
 import { ApiError } from "../../utils/ApiError";
-import { prepareChatForStreaming } from "../chat/chat.services";
+import { prepareChatForStreaming, loadChatHistory } from "../chat/chat.services";
 import { getChatMessages } from "./message.service";
 import { createRAGChain } from "../../services/rag/ragchain.service";
+import { runToolAgent } from "../../services/Tools/tool-runner.service";
+import { retrieveContext, formatDocumentsAsString } from "../../services/rag/rag.service";
 
-export async function saveAssistantMessage(chatId: string, content: string) {
+export async function saveAssistantMessage(chatId: string, content: string, toolData?: any) {
     const [message] = await db
         .insert(messages)
         .values({
             chatId,
             role: "assistant",
             content,
+            toolData: toolData ?? null,
         })
         .returning();
 
@@ -22,15 +25,8 @@ export async function saveAssistantMessage(chatId: string, content: string) {
 
 /**
  * Streaming message handler — now uses LangChain chain.stream().
- *
- * OLD FLOW:
- *   prepareChatPrompt() → generateAIResponseStream(prompt) → manual Groq chunk parsing
- *
- * NEW FLOW:
+ *  FLOW:
  *   prepareChatForStreaming() → createRAGChain(chatId).stream(message) → LangChain chunk parsing
- *
- * LangChain's .stream() outputs clean string chunks directly —
- * no need to dig into choices[0].delta.content anymore.
  */
 export async function sendMessageHandler(req: AuthenticatedRequest, res: Response) {
     const userId = req.user?.id;
@@ -65,8 +61,27 @@ export async function sendMessageHandler(req: AuthenticatedRequest, res: Respons
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
     try {
-        // Create LangChain RAG chain and stream the response
-        const chain = createRAGChain(preparedChatId);
+
+        const rawHistory = await loadChatHistory(preparedChatId, 20);
+        const chatHistory = rawHistory
+            .slice(0, -1) // exclude current user message
+            .map((m) => ({ role: m.role, content: m.content }));
+
+        // Retrieve document context FIRST so the tool agent can extract
+        // real values (e.g. weight/height) from any uploaded file,
+        // rather than guessing from the user's text alone.
+        const contextDocs = await retrieveContext(preparedMessage, preparedChatId);
+        const docContext = formatDocumentsAsString(contextDocs);
+
+        // Run tool agent with full context (message + history + doc context)
+        const { toolResult, toolContext } = await runToolAgent(preparedMessage, chatHistory, docContext);
+
+        if (toolResult) {
+            res.write(`data: ${JSON.stringify({ toolResult })}\n\n`);
+        }
+        // Pass pre-fetched context to the RAG chain so it doesn't re-retrieve
+        const chain = createRAGChain(preparedChatId, toolContext, docContext);
+
         const stream = await chain.stream(preparedMessage);
         let fullAnswer = "";
         for await (const chunk of stream) {
@@ -76,7 +91,7 @@ export async function sendMessageHandler(req: AuthenticatedRequest, res: Respons
                 res.write(`data: ${JSON.stringify({ text: chunk })}\n\n`);
             }
         }
-        await saveAssistantMessage(preparedChatId, fullAnswer);
+        await saveAssistantMessage(preparedChatId, fullAnswer, toolResult);
         res.write("data: [DONE]\n\n");
     } catch (error: any) {
         console.error("Stream generation error:", error);

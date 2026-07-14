@@ -80,10 +80,6 @@ export const LoginUser = async (body: LoginInput) => {
     expiresAt,
   });
 
-  // set refresh token in cookies 
-
-
-
   // 5. Return sanitized user details and tokens
   const { password: _, ...userWithoutPassword } = user;
 

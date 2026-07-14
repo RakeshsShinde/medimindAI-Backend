@@ -8,7 +8,6 @@ export async function generateChatTitle(firstMessage: string): Promise<string> {
     const title = await chain.invoke({
       firstMessage: firstMessage.substring(0, 500)
     })
-    console.log("generted title ", title)
     return title ? title.trim().replace(/^["']|["']$/g, "") : "New Chat";
   } catch (err) {
     console.error("Error while generating the chat title ", err);

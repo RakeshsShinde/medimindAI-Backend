@@ -51,6 +51,7 @@ export async function loadChatHistory(chatId: string, limit = 20) {
       citations: msg.citations,
       createdAt: msg.createdAt,
       files: mappedFiles || [],
+      toolData: msg.toolData || undefined,
     };
   });
 }

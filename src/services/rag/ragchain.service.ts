@@ -1,24 +1,12 @@
-// services/rag/rag-chain.ts
-
 import { RunnableSequence, RunnableLambda } from "@langchain/core/runnables";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { llm } from "../../config/langchain.config";
-import { ragPromptTemplate, formatChatHistory } from "./prompt-builder";
+import { ragPromptTemplate, bmiRagPromptTemplate, formatChatHistory } from "./prompt-builder";
 import { retrieveContext, formatDocumentsAsString } from "./rag.service";
 import { loadChatHistory } from "../../modules/chat/chat.services";
 
 /**
  * Creates a complete RAG chain for a specific chat.
- *
- * This single chain replaces what was previously 4 separate manual calls in
- * message.services.ts and chat.services.ts:
- *   1. searchRelevantChunks(message, chatId)
- *   2. loadChatHistory(chatId)
- *   3. buildPrompt({ history, context, question })
- *   4. generateAIResponse(prompt)
- *
- * Now it's just: const answer = await chain.invoke(userMessage)
- *
  * The chain pipeline:
  *   userMessage
  *     → parallel: retrieve context docs + load chat history
@@ -26,25 +14,36 @@ import { loadChatHistory } from "../../modules/chat/chat.services";
  *     → send to Groq LLM
  *     → parse output string
  */
-export function createRAGChain(chatId: string) {
+export function createRAGChain(chatId: string, toolContext: string = '', preloadedContext?: string) {
     // Step 1: Prepare inputs — retrieve context and history in parallel
     const prepareInputs = RunnableLambda.from(async (question: string) => {
         const [contextDocs, history] = await Promise.all([
-            retrieveContext(question, chatId),
+            // If the controller already retrieved context (to share with the tool agent),
+            // skip the vector search to avoid a duplicate round-trip.
+            preloadedContext !== undefined
+                ? Promise.resolve(null)
+                : retrieveContext(question, chatId),
             loadChatHistory(chatId),
         ]);
 
         return {
-            context: formatDocumentsAsString(contextDocs),
+            context: preloadedContext !== undefined
+                ? preloadedContext
+                : formatDocumentsAsString(contextDocs!),
             history: formatChatHistory(history),
+            toolContext,
             question,
         };
     });
 
-    // Step 2: Build the chain
+    // Step 2: Dynamically select prompt template based on tool result presence
+    const hasBmiData = toolContext && toolContext.includes('"bmi"');
+    const promptTemplate = hasBmiData ? bmiRagPromptTemplate : ragPromptTemplate;
+
+    // Step 3: Build the chain
     const chain = RunnableSequence.from([
         prepareInputs,
-        ragPromptTemplate,
+        promptTemplate,
         llm,
         new StringOutputParser(),
     ]);
