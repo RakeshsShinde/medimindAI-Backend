@@ -1,5 +1,39 @@
 import { Document } from "@langchain/core/documents";
 import { getVectorStore } from "../../config/langchain.config";
+import { env } from "../../config/env";
+
+
+
+/**
+ * Creates payload indexes on the Qdrant collection so that filtering
+ * by chatId and fileId is fast. Safe to call on every startup —
+ * Qdrant ignores the request if the index already exists.
+ */
+// export async function ensureQdrantIndexes(): Promise<void> {
+//     const base = `${env.QDRANT_URL}/collections/medical_chunks/index`;
+//     const headers = {
+//         "api-key": env.QDRANT_API_KEY,
+//         "Content-Type": "application/json",
+//     };
+
+//     const fields = [
+//         { field_name: "metadata.chatId", field_schema: "keyword" },
+//         { field_name: "metadata.fileId", field_schema: "keyword" },
+//         { field_name: "metadata.userId", field_schema: "keyword" },
+//     ];
+
+//     await Promise.all(
+//         fields.map((body) =>
+//             fetch(base, {
+//                 method: "PUT",
+//                 headers,
+//                 body: JSON.stringify(body),
+//             })
+//         )
+//     );
+
+//     console.log(`[Qdrant] Payload indexes ensured on medical_chunks`);
+// }
 
 
 /**
@@ -31,6 +65,6 @@ export async function indexDocuments({
         })
     })
 
-    const vectorStore = await getVectorStore("medical_chunks");
+    const vectorStore = await getVectorStore('medical_chunks');
     await vectorStore.addDocuments(enrichedDocs);
 }

@@ -1,5 +1,6 @@
 import app from "./app";
 import { env } from "./config/env";
+// import { ensureQdrantIndexes } from "./services/vector/qdrant.service";
 
 async function bootstrap() {
   // await ensureQdrantIndexes();

@@ -1,5 +1,5 @@
 import { ChatGroq } from '@langchain/groq';
-import { OllamaEmbeddings } from '@langchain/ollama';
+import { CohereEmbeddings } from '@langchain/cohere';
 import { QdrantVectorStore } from '@langchain/qdrant';
 import { env } from './env';
 
@@ -12,11 +12,11 @@ export const llm = new ChatGroq({
 })
 
 
-// Embeddings (ollama -nomic-embed-text)
-
-export const embeddings = new OllamaEmbeddings({
-    model: "nomic-embed-text",
-    baseUrl: "http://localhost:11434",
+// Embeddings (Cohere - embed-english-v3.0)
+// Free tier: 1000 calls/month — no credit card needed
+export const embeddings = new CohereEmbeddings({
+    model: "embed-english-v3.0",
+    apiKey: env.COHERE_API_KEY,
 })
 
 //  vector store factory 

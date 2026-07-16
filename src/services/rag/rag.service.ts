@@ -26,7 +26,7 @@ export async function getChatAttachedFileIds(chatId: string): Promise<string[]> 
 }
 
 export async function createRetriever(chatId: string, fileIds: string[]) {
-    const vectorStore = await getVectorStore("medical_chunks");
+    const vectorStore = await getVectorStore('medical_chunks');
 
     // Build a Qdrant filter that:
     //  - `must`: scopes to this chat's chatId (maintains full chat context)
