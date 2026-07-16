@@ -21,7 +21,7 @@ export const embeddings = new CohereEmbeddings({
 
 //  vector store factory 
 
-export function getVectorStore(collectionName: string = "medical-chunks") {
+export function getVectorStore(collectionName: string = env.COLLECTION) {
     return QdrantVectorStore.fromExistingCollection(embeddings, {
         url: env.QDRANT_URL,
         apiKey: env.QDRANT_API_KEY,

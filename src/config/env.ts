@@ -20,4 +20,8 @@ export const env = {
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET!,
   GEMINI_API_KEY: process.env.GEMINI_API_KEY!,
   COHERE_API_KEY: process.env.COHERE_API_KEY!,
+  NODE_ENV: process.env.NODE_ENV || "development",
+  get COLLECTION() {
+    return this.NODE_ENV === "production" ? "production_medical_chunks" : "medical_chunks";
+  }
 };

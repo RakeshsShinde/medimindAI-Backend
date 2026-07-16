@@ -1,5 +1,6 @@
 import { Document } from "@langchain/core/documents";
 import { getVectorStore } from "../../config/langchain.config";
+import { env } from "../../config/env";
 import { rerankDocuments } from "./re-ranker.service";
 import { db } from "../../config/db";
 import { eq, inArray } from "drizzle-orm";
@@ -26,7 +27,7 @@ export async function getChatAttachedFileIds(chatId: string): Promise<string[]> 
 }
 
 export async function createRetriever(chatId: string, fileIds: string[]) {
-    const vectorStore = await getVectorStore('medical_chunks');
+    const vectorStore = await getVectorStore(env.COLLECTION);
 
     // Build a Qdrant filter that:
     //  - `must`: scopes to this chat's chatId (maintains full chat context)
