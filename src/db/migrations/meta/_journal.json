@@ -43,6 +43,13 @@
       "when": 1783758875573,
       "tag": "0005_right_doctor_doom",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1784220302143,
+      "tag": "0006_nasty_cloak",
+      "breakpoints": true
     }
   ]
 }
