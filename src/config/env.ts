@@ -6,8 +6,8 @@ const isProd = process.env.NODE_ENV === "production";
 
 export const env = {
   PORT: process.env.PORT!,
-  DATABASE_URL: isProd 
-    ? (process.env.PROD_DATABASE_URL || process.env.DATABASE_URL!) 
+  DATABASE_URL: isProd
+    ? (process.env.PROD_DATABASE_URL || process.env.DATABASE_URL!)
     : process.env.DATABASE_URL!,
   CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME!,
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY!,
@@ -25,6 +25,9 @@ export const env = {
   GEMINI_API_KEY: process.env.GEMINI_API_KEY!,
   COHERE_API_KEY: process.env.COHERE_API_KEY!,
   NODE_ENV: process.env.NODE_ENV || "development",
+  FRONTEND_URL: isProd
+    ? (process.env.PRODUCTION_FRONTEND_URL || "https://your-production-url.com")
+    : (process.env.DEV_FRONTEND_URL || "http://localhost:5173"),
   get COLLECTION() {
     return this.NODE_ENV === "production" ? "production_medical_chunks" : "medical_chunks";
   }

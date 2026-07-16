@@ -7,6 +7,7 @@ import authRoutes from "./modules/auth/auth.routes";
 import chatRoutes from "./modules/chat/chat.route";
 import messageRoutes from "./modules/message/message.route";
 import { errorMiddleware } from "./middlewares/error.middleware";
+import { env } from "./config/env";
 const app = express();
 
 
@@ -18,7 +19,7 @@ app.use(morgan("dev"));
 app.use(express.json());
 
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: env.FRONTEND_URL,
   credentials: true,
 }));
 
