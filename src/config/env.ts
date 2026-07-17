@@ -25,8 +25,9 @@ export const env = {
   GEMINI_API_KEY: process.env.GEMINI_API_KEY!,
   COHERE_API_KEY: process.env.COHERE_API_KEY!,
   NODE_ENV: process.env.NODE_ENV || "development",
+  BACKEND_URL: isProd ? process.env.PRODUCTION_BACKEND_URL : process.env.DEV_BACKEND_URL,
   FRONTEND_URL: isProd
-    ? (process.env.PRODUCTION_FRONTEND_URL || "https://your-production-url.com")
+    ? (process.env.PRODUCTION_FRONTEND_URL || "https://www.mediminds.live")
     : (process.env.DEV_FRONTEND_URL || "http://localhost:5173"),
   get COLLECTION() {
     return this.NODE_ENV === "production" ? "production_medical_chunks" : "medical_chunks";
