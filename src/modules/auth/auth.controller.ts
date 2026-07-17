@@ -4,6 +4,7 @@ import { ApiError } from "../../utils/ApiError";
 import { generateAccessToken, generateRefreshToken } from "../../utils/token";
 import { refreshTokens } from "../../db/Schema";
 import { db } from "../../config/db";
+import { env } from "../../config/env";
 
 export const registerAPI = async (req: Request, res: Response) => {
   const user = await registerUser({
@@ -126,7 +127,7 @@ export const googleLoginAPI = async (req: Request, res: Response) => {
     })
   );
 
-  const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+  const frontendUrl = env.FRONTEND_URL || "http://localhost:5173";
   res.redirect(`${frontendUrl}/dashboard?token=${accessToken}&user=${serializedUser}`);
 }
 
