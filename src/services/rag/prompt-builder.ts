@@ -67,6 +67,33 @@ const BMI_MEDICAL_SYSTEM_PROMPT = `You are an expert medical AI assistant. You h
     ## TOOL RESULTS
     Explain the BMI result provided under TOOL CONTEXT in plain language with medical context. Do not re-calculate or contradict the provided values.`;
 
+const MEDICINE_LOOKUP_SYSTEM_PROMPT = `You are an expert medical AI assistant. \
+A drug lookup has been performed using the official FDA DailyMed database.
+
+## YOUR TASK
+Analyze the user's QUESTION and answer it directly and accurately using the data provided in TOOL CONTEXT (FDA DailyMed Drug Data).
+
+## CORE INSTRUCTION & RESPONSE FORMAT
+1. **DIRECT ANSWER FIRST**:
+   - Examine what the user specifically asked in QUESTION.
+   - If the user asks a specific question (e.g. "What is the generic name of Tylenol?", "What are the side effects of Aspirin?", "What is the dosage limit?"), start your response by directly and prominently answering that exact question in 1–2 clear sentences.
+   - Example for "What is the generic name of Tylenol?":
+     "The generic name of Tylenol is **Acetaminophen** (or paracetamol)."
+2. **ADDITIONAL RELEVANT DETAILS**:
+   - Following your direct answer (or if the user asked for general information about a drug), provide relevant drug context from TOOL CONTEXT in clean Markdown sections:
+     - **Indications / Usage**
+     - **Dosage & Administration Summary**
+     - **Key Warnings** (mark severe risks with ⚠️)
+     - **Common Side Effects**
+3. **STRICT RULES**:
+   - Use ONLY the facts provided in TOOL CONTEXT data — do not fabricate or speculate.
+   - Do NOT ignore the user's explicit question or bury the answer deep in boilerplate text. Answer what was asked FIRST.
+   - **No treatment prescriptions** — do not instruct the user to take a specific dosage or drug.
+   - **Always recommend physician review** for dosage, interactions, and individual suitability.
+   - **Emergency escalation** — if warnings indicate severe or life-threatening risks, state: "⚠️ URGENT: Discuss this with a healthcare provider immediately."
+4. **⚕️ Disclaimer**:
+   - Always end with: "This summary is for informational purposes only. Always consult your doctor or pharmacist before starting or changing any medication."`;
+
 /**
  * LangChain ChatPromptTemplate — uses proper system/user message roles.
  *
@@ -76,6 +103,36 @@ const BMI_MEDICAL_SYSTEM_PROMPT = `You are an expert medical AI assistant. You h
  *
  * Variables: {history}, {context}, {question}
  */
+/**
+ * Helper: format chat history array into a string.
+ */
+export function formatChatHistory(history: any[]): string {
+    if (history.length === 0) return "No prior conversation.";
+    return history
+        .map((m) => `${m.role.toUpperCase()}: ${m.content}`)
+        .join("\n");
+}
+
+export const CHAT_TITLE_SYSTEM_PROMPT = `
+    You are a strict metadata generator. Your sole task is to generate a short, 
+    clean title (maximum 8 words) that summarizes the user's initial message.
+
+    CRITICAL RULES:
+    - Output the TITLE ONLY.
+    - DO NOT answer the user's query or medical questions.
+    - DO NOT include quotes, prefix text, or punctuation.
+    - NEVER output conversational text, explanations, or meta-comments.
+    Examples:
+    - Message: "analyze my blood report" -> "Blood Report Analysis"
+    - Message: "what are the side effects of aspirin" -> "Aspirin Side Effects"
+    - Message: "ECG shows abnormalities" -> "ECG Findings Summary"`;
+
+export const chatTitlePromptTemplate = ChatPromptTemplate.fromMessages([
+    ["system", CHAT_TITLE_SYSTEM_PROMPT],
+    ["human", "{firstMessage}"]
+])
+
+
 export const ragPromptTemplate = ChatPromptTemplate.fromMessages([
     SystemMessagePromptTemplate.fromTemplate(MEDICAL_SYSTEM_PROMPT),
     HumanMessagePromptTemplate.fromTemplate(
@@ -121,31 +178,25 @@ export const bmiRagPromptTemplate = ChatPromptTemplate.fromMessages([
     ),
 ]);
 
-/**
- * Helper: format chat history array into a string.
- */
-export function formatChatHistory(history: any[]): string {
-    if (history.length === 0) return "No prior conversation.";
-    return history
-        .map((m) => `${m.role.toUpperCase()}: ${m.content}`)
-        .join("\n");
-}
+export const medicineLookupRagPromptTemplate = ChatPromptTemplate.fromMessages([
+    SystemMessagePromptTemplate.fromTemplate(MEDICINE_LOOKUP_SYSTEM_PROMPT),
+    HumanMessagePromptTemplate.fromTemplate(
+        `## CHAT HISTORY
+        {history}
 
-export const CHAT_TITLE_SYSTEM_PROMPT = `
-    You are a strict metadata generator. Your sole task is to generate a short, 
-    clean title (maximum 8 words) that summarizes the user's initial message.
+        ---
 
-    CRITICAL RULES:
-    - Output the TITLE ONLY.
-    - DO NOT answer the user's query or medical questions.
-    - DO NOT include quotes, prefix text, or punctuation.
-    - NEVER output conversational text, explanations, or meta-comments.
-    Examples:
-    - Message: "analyze my blood report" -> "Blood Report Analysis"
-    - Message: "what are the side effects of aspirin" -> "Aspirin Side Effects"
-    - Message: "ECG shows abnormalities" -> "ECG Findings Summary"`;
+        ## DOCUMENT CONTEXT
+        {context}
 
-export const chatTitlePromptTemplate = ChatPromptTemplate.fromMessages([
-    ["system", CHAT_TITLE_SYSTEM_PROMPT],
-    ["human", "{firstMessage}"]
-])
+        ---
+
+        ## TOOL CONTEXT (FDA DailyMed Drug Data)
+        {toolContext}
+
+        ---
+
+        ## QUESTION
+        {question}`
+    ),
+]);
