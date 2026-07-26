@@ -1,7 +1,7 @@
 import { RunnableSequence, RunnableLambda } from "@langchain/core/runnables";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { llm } from "../../config/langchain.config";
-import { ragPromptTemplate, bmiRagPromptTemplate, formatChatHistory } from "./prompt-builder";
+import { ragPromptTemplate, bmiRagPromptTemplate, formatChatHistory, medicineLookupRagPromptTemplate } from "./prompt-builder";
 import { retrieveContext, formatDocumentsAsString } from "./rag.service";
 import { loadChatHistory } from "../../modules/chat/chat.services";
 
@@ -38,7 +38,12 @@ export function createRAGChain(chatId: string, toolContext: string = '', preload
 
     // Step 2: Dynamically select prompt template based on tool result presence
     const hasBmiData = toolContext && toolContext.includes('"bmi"');
-    const promptTemplate = hasBmiData ? bmiRagPromptTemplate : ragPromptTemplate;
+    const hasLookupData = toolContext && toolContext.includes('"setId"');
+    const promptTemplate = hasBmiData
+        ? bmiRagPromptTemplate
+        : hasLookupData
+            ? medicineLookupRagPromptTemplate
+            : ragPromptTemplate;
 
     // Step 3: Build the chain
     const chain = RunnableSequence.from([
