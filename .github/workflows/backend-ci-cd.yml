@@ -36,4 +36,4 @@ jobs:
 
             npx drizzle-kit migrate
 
-            pm2 restart backend-app
+            pm2 restart backend
